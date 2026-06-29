@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Venue Booking System</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 650px; margin: 40px auto; padding: 20px; line-height: 1.6; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; }
+        input, select, button { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; }
+        button { background-color: #28a745; color: white; border: none; cursor: pointer; font-size: 16px; font-weight: bold; }
+        button:hover { background-color: #218838; }
+        .booking-list { margin-top: 30px; background: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #ddd; }
+        li { margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+
+    <h2>Institutional Venue Booking</h2>
+    
+    <form id="bookingForm">
+        <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="venue">Select Venue</label>
+            <select id="venue" required>
+                <option value="">-- Choose a Room --</option>
+                <optgroup label="Anatomage Rooms">
+                    <option value="Anatomage Table 1">Anatomage Table 1</option>
+                    <option value="Anatomage Table 2">Anatomage Table 2</option>
+                </optgroup>
+                <optgroup label="Smartboard Rooms">
+                    <option value="Smartboard Room 1">Smartboard Room 1</option>
+                    <option value="Smartboard Room 2">Smartboard Room 2</option>
+                    <option value="Smartboard Room 3">Smartboard Room 3</option>
+                    <option value="Smartboard Room 4">Smartboard Room 4</option>
+                    <option value="Smartboard Room 5">Smartboard Room 5</option>
+                </optgroup>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="date">Booking Date</label>
+            <input type="date" id="date" required>
+        </div>
+        <div class="form-group">
+            <label for="timeSlot">Available Time Slot</label>
+            <select id="timeSlot" required>
+                <option value="">-- Select a Slot --</option>
+                <option value="09:00 - 10:00">09:00 AM - 10:00 AM</option>
+                <option value="10:00 - 11:00">10:00 AM - 11:00 AM</option>
+                <option value="11:00 - 12:00">11:00 AM - 12:00 PM</option>
+                <option value="13:00 - 14:00">01:00 PM - 02:00 PM</option>
+                <option value="14:00 - 15:00">02:00 PM - 03:00 PM</option>
+                <option value="15:00 - 16:00">03:00 PM - 04:00 PM</option>
+            </select>
+        </div>
+        <button type="submit">Confirm Booking</button>
+    </form>
+
+    <div class="booking-list">
+        <h3>Today's & Upcoming Bookings</h3>
+        <ul id="bookingsUi">Loading schedules...</ul>
+    </div>
+
+    <script>
+        // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE
+        const API_URL = "https://script.google.com/macros/s/AKfycbxBRh2rYNqQOmdsnh6kj6Jw0fWQvEwGdUZM4-w_FBqpxzMSvLcOspzs_bG6iMxT_2et/exec";
+
+        // Fetch and display bookings
+        async function fetchBookings() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                const list = document.getElementById('bookingsUi');
+                list.innerHTML = '';
+                
+                if (data.length === 0) {
+                    list.innerHTML = '<li>No bookings made yet.</li>';
+                    return;
+                }
+
+                // Sort by date (optional, makes it look cleaner)
+                data.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+
+                data.forEach(booking => {
+                    const li = document.createElement('li');
+                    // Updated to show the Venue
+                    li.innerHTML = `<strong>${booking.Venue}</strong>: ${booking.Date} (${booking.TimeSlot}) - Booked by ${booking.Name}`;
+                    list.appendChild(li);
+                });
+            } catch (error) {
+                document.getElementById('bookingsUi').textContent = "Failed to load bookings.";
+            }
+        }
+
+        // Handle Form Submission
+        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const payload = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                venue: document.getElementById('venue').value, // New Venue field
+                date: document.getElementById('date').value,
+                timeSlot: document.getElementById('timeSlot').value
+            };
+
+            const submitButton = e.target.querySelector('button');
+            submitButton.disabled = true;
+            submitButton.textContent = "Processing...";
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    alert('Booking successful!');
+                    document.getElementById('bookingForm').reset();
+                    fetchBookings();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('An error occurred. Please try again.');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = "Confirm Booking";
+            }
+        });
+
+        // Load bookings on page load
+        fetchBookings();
+    </script>
+</body>
+</html>
