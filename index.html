@@ -97,7 +97,7 @@
                 data.forEach(booking => {
                     const li = document.createElement('li');
                     // Updated to show the Venue
-                    li.innerHTML = `<strong>${booking.Venue}</strong>: ${booking.Date} (${booking.TimeSlot}) - Booked by ${booking.Name}`;
+                    li.innerHTML = `<strong>${booking.Venue}</strong>: ${booking.Date} (${booking.timeSlot}) - Booked by ${booking.Name}`;
                     list.appendChild(li);
                 });
             } catch (error) {
